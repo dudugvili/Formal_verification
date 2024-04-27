@@ -1,0 +1,248 @@
+MODULE main
+VAR
+    keeper_x : 1..5;
+    keeper_y : 1..5;
+    wall : array 1..5 of array 1..5 of boolean;
+    goal : array 1..5 of array 1..5 of boolean;
+    box_positions : array 1..2 of array 1..5 of array 1..5 of boolean;
+ASSIGN
+    init(keeper_x) := 2;
+    init(keeper_y) := 2;
+    init(wall[1][1]) := TRUE;
+    init(wall[1][2]) := TRUE;
+    init(wall[1][3]) := TRUE;
+    init(wall[1][4]) := TRUE;
+    init(wall[1][5]) := TRUE;
+    init(wall[2][1]) := TRUE;
+    init(wall[2][2]) := FALSE;
+    init(wall[2][3]) := FALSE;
+    init(wall[2][4]) := FALSE;
+    init(wall[2][5]) := TRUE;
+    init(wall[3][1]) := TRUE;
+    init(wall[3][2]) := FALSE;
+    init(wall[3][3]) := FALSE;
+    init(wall[3][4]) := FALSE;
+    init(wall[3][5]) := TRUE;
+    init(wall[4][1]) := TRUE;
+    init(wall[4][2]) := FALSE;
+    init(wall[4][3]) := FALSE;
+    init(wall[4][4]) := FALSE;
+    init(wall[4][5]) := TRUE;
+    init(wall[5][1]) := TRUE;
+    init(wall[5][2]) := TRUE;
+    init(wall[5][3]) := TRUE;
+    init(wall[5][4]) := TRUE;
+    init(wall[5][5]) := TRUE;
+    init(goal[1][1]) := FALSE;
+    init(goal[1][2]) := FALSE;
+    init(goal[1][3]) := FALSE;
+    init(goal[1][4]) := FALSE;
+    init(goal[1][5]) := FALSE;
+    init(goal[2][1]) := FALSE;
+    init(goal[2][2]) := FALSE;
+    init(goal[2][3]) := TRUE;
+    init(goal[2][4]) := TRUE;
+    init(goal[2][5]) := FALSE;
+    init(goal[3][1]) := FALSE;
+    init(goal[3][2]) := FALSE;
+    init(goal[3][3]) := FALSE;
+    init(goal[3][4]) := TRUE;
+    init(goal[3][5]) := FALSE;
+    init(goal[4][1]) := FALSE;
+    init(goal[4][2]) := TRUE;
+    init(goal[4][3]) := FALSE;
+    init(goal[4][4]) := TRUE;
+    init(goal[4][5]) := FALSE;
+    init(goal[5][1]) := FALSE;
+    init(goal[5][2]) := FALSE;
+    init(goal[5][3]) := FALSE;
+    init(goal[5][4]) := FALSE;
+    init(goal[5][5]) := FALSE;
+    init(box_positions[1][1][1]) := FALSE;
+    init(box_positions[1][1][2]) := FALSE;
+    init(box_positions[1][1][3]) := FALSE;
+    init(box_positions[1][1][4]) := FALSE;
+    init(box_positions[1][1][5]) := FALSE;
+    init(box_positions[1][2][1]) := FALSE;
+    init(box_positions[1][2][2]) := FALSE;
+    init(box_positions[1][2][3]) := FALSE;
+    init(box_positions[1][2][4]) := FALSE;
+    init(box_positions[1][2][5]) := FALSE;
+    init(box_positions[1][3][1]) := FALSE;
+    init(box_positions[1][3][2]) := TRUE;
+    init(box_positions[1][3][3]) := FALSE;
+    init(box_positions[1][3][4]) := FALSE;
+    init(box_positions[1][3][5]) := FALSE;
+    init(box_positions[1][4][1]) := FALSE;
+    init(box_positions[1][4][2]) := FALSE;
+    init(box_positions[1][4][3]) := FALSE;
+    init(box_positions[1][4][4]) := FALSE;
+    init(box_positions[1][4][5]) := FALSE;
+    init(box_positions[1][5][1]) := FALSE;
+    init(box_positions[1][5][2]) := FALSE;
+    init(box_positions[1][5][3]) := FALSE;
+    init(box_positions[1][5][4]) := FALSE;
+    init(box_positions[1][5][5]) := FALSE;
+    init(box_positions[2][1][1]) := FALSE;
+    init(box_positions[2][1][2]) := FALSE;
+    init(box_positions[2][1][3]) := FALSE;
+    init(box_positions[2][1][4]) := FALSE;
+    init(box_positions[2][1][5]) := FALSE;
+    init(box_positions[2][2][1]) := FALSE;
+    init(box_positions[2][2][2]) := FALSE;
+    init(box_positions[2][2][3]) := FALSE;
+    init(box_positions[2][2][4]) := FALSE;
+    init(box_positions[2][2][5]) := FALSE;
+    init(box_positions[2][3][1]) := FALSE;
+    init(box_positions[2][3][2]) := FALSE;
+    init(box_positions[2][3][3]) := TRUE;
+    init(box_positions[2][3][4]) := FALSE;
+    init(box_positions[2][3][5]) := FALSE;
+    init(box_positions[2][4][1]) := FALSE;
+    init(box_positions[2][4][2]) := FALSE;
+    init(box_positions[2][4][3]) := FALSE;
+    init(box_positions[2][4][4]) := FALSE;
+    init(box_positions[2][4][5]) := FALSE;
+    init(box_positions[2][5][1]) := FALSE;
+    init(box_positions[2][5][2]) := FALSE;
+    init(box_positions[2][5][3]) := FALSE;
+    init(box_positions[2][5][4]) := FALSE;
+    init(box_positions[2][5][5]) := FALSE;
+TRANS
+    case
+    -- ** Keeper movements without boxes **
+    -- Keeper moves left
+    (keeper_x > 2 & !wall[keeper_x - 1][keeper_y] & !box_positions[1][keeper_x - 1][keeper_y] & !box_positions[2][keeper_x - 1][keeper_y]) : 
+        next(keeper_x) = keeper_x - 1 &
+        next(keeper_y) = keeper_y;
+    
+
+    -- Keeper moves right
+    (keeper_x < 5 & !wall[keeper_x + 1][keeper_y] & !box_positions[1][keeper_x + 1][keeper_y] & !box_positions[2][keeper_x + 1][keeper_y]) : 
+        next(keeper_x) = keeper_x + 1 &
+        next(keeper_y) = keeper_y;
+    
+
+    -- Keeper moves up
+    (keeper_y > 2 & !wall[keeper_x][keeper_y - 1] & !box_positions[1][keeper_x][keeper_y - 1] & !box_positions[2][keeper_x][keeper_y - 1]) : 
+        next(keeper_x) = keeper_x &
+        next(keeper_y) = keeper_y - 1;
+    
+
+    -- Keeper moves down
+    (keeper_y < 5 & !wall[keeper_x][keeper_y + 1] & !box_positions[1][keeper_x][keeper_y + 1] & !box_positions[2][keeper_x][keeper_y + 1]) : 
+        next(keeper_x) = keeper_x &
+        next(keeper_y) = keeper_y + 1;
+    
+
+
+    -- ** Handling box movements when keeper pushes box[1] **
+
+    -- Keeper pushes box[1] left
+    (keeper_x > 3 & !wall[keeper_x - 1][keeper_y] & !wall[keeper_x - 2][keeper_y] & box_positions[1][keeper_x - 1][keeper_y] & !goal[keeper_x - 1][keeper_y] & !box_positions[2][keeper_x - 2][keeper_y]) : 
+        next(box_positions[1][keeper_x - 1][keeper_y]) = FALSE &
+        next(box_positions[1][keeper_x - 2][keeper_y]) = TRUE &
+        next(keeper_x) = keeper_x - 1 &
+        next(keeper_y) = keeper_y;
+    
+    
+    -- Keeper pushes box[1] right
+    (keeper_x < 3 & !wall[keeper_x + 1][keeper_y] & !wall[keeper_x + 2][keeper_y] & box_positions[1][keeper_x + 1][keeper_y]  & !goal[keeper_x + 1][keeper_y] & !box_positions[2][keeper_x + 2][keeper_y]) : 
+        next(box_positions[1][keeper_x + 1][keeper_y]) = FALSE &
+        next(box_positions[1][keeper_x + 2][keeper_y]) = TRUE &
+        next(keeper_x) = keeper_x + 1 &
+        next(keeper_y) = keeper_y;
+    
+
+    -- Keeper pushes box[1] up
+    (keeper_y > 3 & !wall[keeper_x][keeper_y - 1] & !wall[keeper_x][keeper_y - 2] & box_positions[1][keeper_x][keeper_y - 1]  & !goal[keeper_x][keeper_y - 1] & !box_positions[2][keeper_x][keeper_y - 2]) : 
+        next(box_positions[1][keeper_x][keeper_y - 1]) = FALSE &
+        next(box_positions[1][keeper_x][keeper_y - 2]) = TRUE &
+        next(keeper_x) = keeper_x &
+        next(keeper_y) = keeper_y - 1;
+    
+
+    -- Keeper pushes box[1] down
+    (keeper_y < 3 & !wall[keeper_x][keeper_y + 1] & !wall[keeper_x][keeper_y + 2] & box_positions[1][keeper_x][keeper_y + 1]  & !goal[keeper_x][keeper_y + 1] & !box_positions[2][keeper_x][keeper_y + 2]) : 
+        next(box_positions[1][keeper_x][keeper_y + 1]) = FALSE &
+        next(box_positions[1][keeper_x][keeper_y + 2]) = TRUE &
+        next(keeper_x) = keeper_x &
+        next(keeper_y) = keeper_y + 1;
+    
+
+    -- Default: No movement
+    TRUE : 
+        next(keeper_x) = keeper_x &
+        next(keeper_y) = keeper_y &
+        next(wall[1][1]) = wall[1][1] &
+        next(wall[1][2]) = wall[1][2] &
+        next(wall[1][3]) = wall[1][3] &
+        next(wall[1][4]) = wall[1][4] &
+        next(wall[1][5]) = wall[1][5] &
+        next(wall[2][1]) = wall[2][1] &
+        next(wall[2][2]) = wall[2][2] &
+        next(wall[2][3]) = wall[2][3] &
+        next(wall[2][4]) = wall[2][4] &
+        next(wall[2][5]) = wall[2][5] &
+        next(wall[3][1]) = wall[3][1] &
+        next(wall[3][2]) = wall[3][2] &
+        next(wall[3][3]) = wall[3][3] &
+        next(wall[3][4]) = wall[3][4] &
+        next(wall[3][5]) = wall[3][5] &
+        next(wall[4][1]) = wall[4][1] &
+        next(wall[4][2]) = wall[4][2] &
+        next(wall[4][3]) = wall[4][3] &
+        next(wall[4][4]) = wall[4][4] &
+        next(wall[4][5]) = wall[4][5] &
+        next(wall[5][1]) = wall[5][1] &
+        next(wall[5][2]) = wall[5][2] &
+        next(wall[5][3]) = wall[5][3] &
+        next(wall[5][4]) = wall[5][4] &
+        next(wall[5][5]) = wall[5][5] &
+
+        next(goal[1][1]) = goal[1][1] &
+        next(goal[1][2]) = goal[1][2] &
+        next(goal[1][3]) = goal[1][3] &
+        next(goal[1][4]) = goal[1][4] &
+        next(goal[1][5]) = goal[1][5] &
+        next(goal[2][1]) = goal[2][1] &
+        next(goal[2][2]) = goal[2][2] &
+        next(goal[2][3]) = goal[2][3] &
+        next(goal[2][4]) = goal[2][4] &
+        next(goal[2][5]) = goal[2][5] &
+        next(goal[3][1]) = goal[3][1] &
+        next(goal[3][2]) = goal[3][2] &
+        next(goal[3][3]) = goal[3][3] &
+        next(goal[3][4]) = goal[3][4] &
+        next(goal[3][5]) = goal[3][5] &
+        next(goal[4][1]) = goal[4][1] &
+        next(goal[4][2]) = goal[4][2] &
+        next(goal[4][3]) = goal[4][3] &
+        next(goal[4][4]) = goal[4][4] &
+        next(goal[4][5]) = goal[4][5] &
+        next(goal[5][1]) = goal[5][1] &
+        next(goal[5][2]) = goal[5][2] &
+        next(goal[5][3]) = goal[5][3] &
+        next(goal[5][4]) = goal[5][4] &
+        next(goal[5][5]) = goal[5][5] &
+
+        next(box_positions[1][1][1]) = box_positions[1][1][1] &
+        next(box_positions[1][1][2]) = box_positions[1][1][2] &
+        next(box_positions[1][1][3]) = box_positions[1][1][3] &
+        next(box_positions[1][1][4]) = box_positions[1][1][4] &
+        next(box_positions[1][2][1]) = box_positions[1][2][1] &
+        next(box_positions[1][2][2]) = box_positions[1][2][2] &
+        next(box_positions[1][2][3]) = box_positions[1][2][3] &
+        next(box_positions[1][2][4]) = box_positions[1][2][4] &
+        next(box_positions[1][3][1]) = box_positions[1][3][1] &
+        next(box_positions[1][3][2]) = box_positions[1][3][2] &
+        next(box_positions[1][3][3]) = box_positions[1][3][3] &
+        next(box_positions[1][3][4]) = box_positions[1][3][4] &
+        next(box_positions[1][4][1]) = box_positions[1][4][1] &
+        next(box_positions[1][4][2]) = box_positions[1][4][2] &
+        next(box_positions[1][4][3]) = box_positions[1][4][3] &
+        next(box_positions[1][4][4]) = box_positions[1][4][4];
+esac;
+
+LTLSPEC
+    (!(((box_positions[1][4][2] = TRUE) | (box_positions[1][2][3] = TRUE) | (box_positions[1][2][4] = TRUE) | (box_positions[1][3][4] = TRUE) | (box_positions[1][4][4] = TRUE)) & ((box_positions[2][4][2] = TRUE) | (box_positions[2][2][3] = TRUE) | (box_positions[2][2][4] = TRUE) | (box_positions[2][3][4] = TRUE) | (box_positions[2][4][4] = TRUE))))
