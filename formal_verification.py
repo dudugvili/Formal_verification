@@ -75,11 +75,12 @@ def generate_init_boxes(boxes, width, height):
 
 def generate_winning_condition(model_data):
     conditions = []
+    
     for i, box in enumerate(model_data['boxes'], start=1):
-        condition = " | ".join([f"(box_positions[{i}][{goal_x}][{goal_y}] = TRUE)" 
-                                for goal_x, goal_y in model_data['goals']])
-        conditions.append(condition)
-    return ("(!((" + (") & (".join(conditions)) + ")))")
+        condition = " |\n         ".join([f"(box_positions[{i}][{goal_x}][{goal_y}] = TRUE)" 
+                                          for goal_x, goal_y in model_data['goals']])
+        conditions.append(f"{condition}")
+    return ("!F ((" + " ) &\n (    ".join(conditions) + "))")
 
 def generate_transition_conditions(model_data, num_boxes):
     transitions = "(\n"
@@ -89,77 +90,185 @@ def generate_transition_conditions(model_data, num_boxes):
     keeper_transitions = f"""
     -- ** Keeper movements without boxes **
     -- Keeper moves left
-    (keeper_x > 2 & !wall[keeper_x - 1][keeper_y] & { ' & '.join(f'!box_positions[{j}][keeper_x - 1][keeper_y]' for j in range(1, num_boxes + 1))}) : 
+    keeper_x > 1 & !wall[keeper_x - 1][keeper_y] & 
+    {' & '.join(f'!box_positions[{j}][keeper_x - 1][keeper_y]' for j in range(1, num_boxes + 1))} : 
         next(keeper_x) = keeper_x - 1 &
-        next(keeper_y) = keeper_y;
-    
+        next(keeper_y) = keeper_y &
+    {' & '.join(f'next(wall[{x}][{y}]) = wall[{x}][{y}]' 
+                for x in range(1, model_data['width'] + 1) 
+                for y in range(1, model_data['height'] + 1))} &
+    {' & '.join(f'next(goal[{x}][{y}]) = goal[{x}][{y}]' 
+                for x in range(1, model_data['width'] + 1) 
+                for y in range(1, model_data['height'] + 1))} &
+    {' & '.join(f'next(box_positions[{j}][{x}][{y}]) = box_positions[{j}][{x}][{y}]' 
+                for j in range(1, num_boxes + 1) 
+                for x in range(1, model_data['width']) 
+                for y in range(1, model_data['height']))};
 
     -- Keeper moves right
-    (keeper_x < {model_data['width']} & !wall[keeper_x + 1][keeper_y] & { ' & '.join(f'!box_positions[{j}][keeper_x + 1][keeper_y]' for j in range(1, num_boxes + 1))}) : 
+    keeper_x < {model_data['width'] + 1} & !wall[keeper_x + 1][keeper_y] & 
+    {' & '.join(f'!box_positions[{j}][keeper_x + 1][keeper_y]' for j in range(1, num_boxes + 1))} : 
         next(keeper_x) = keeper_x + 1 &
-        next(keeper_y) = keeper_y;
-    
+        next(keeper_y) = keeper_y &
+        {' & '.join(f'next(wall[{x}][{y}]) = wall[{x}][{y}]' 
+                for x in range(1, model_data['width'] + 1) 
+                for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{x}][{y}]) = goal[{x}][{y}]' 
+                    for x in range(1, model_data['width'] + 1) 
+                    for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{x}][{y}]) = box_positions[{j}][{x}][{y}]' 
+                    for j in range(1, num_boxes + 1) 
+                    for x in range(1, model_data['width']) 
+                    for y in range(1, model_data['height']))};
 
     -- Keeper moves up
-    (keeper_y > 2 & !wall[keeper_x][keeper_y - 1] & { ' & '.join(f'!box_positions[{j}][keeper_x][keeper_y - 1]' for j in range(1, num_boxes + 1))}) : 
+    keeper_y > 1 & !wall[keeper_x][keeper_y - 1] & 
+    {' & '.join(f'!box_positions[{j}][keeper_x][keeper_y - 1]' for j in range(1, num_boxes + 1))} : 
         next(keeper_x) = keeper_x &
-        next(keeper_y) = keeper_y - 1;
-    
+        next(keeper_y) = keeper_y - 1 &
+        {' & '.join(f'next(wall[{x}][{y}]) = wall[{x}][{y}]' 
+                for x in range(1, model_data['width'] + 1) 
+                for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{x}][{y}]) = goal[{x}][{y}]' 
+                    for x in range(1, model_data['width'] + 1) 
+                    for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{x}][{y}]) = box_positions[{j}][{x}][{y}]' 
+                    for j in range(1, num_boxes + 1) 
+                    for x in range(1, model_data['width']) 
+                    for y in range(1, model_data['height']))};
 
     -- Keeper moves down
-    (keeper_y < {model_data['height']} & !wall[keeper_x][keeper_y + 1] & { ' & '.join(f'!box_positions[{j}][keeper_x][keeper_y + 1]' for j in range(1, num_boxes + 1))}) : 
+    keeper_y < {model_data['height'] + 1} & !wall[keeper_x][keeper_y + 1] & 
+    {' & '.join(f'!box_positions[{j}][keeper_x][keeper_y + 1]' for j in range(1, num_boxes + 1))} : 
         next(keeper_x) = keeper_x &
-        next(keeper_y) = keeper_y + 1;
-    \n\n"""
+        next(keeper_y) = keeper_y + 1 &
+        {' & '.join(f'next(wall[{x}][{y}]) = wall[{x}][{y}]' 
+                for x in range(1, model_data['width'] + 1) 
+                for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{x}][{y}]) = goal[{x}][{y}]' 
+                    for x in range(1, model_data['width'] + 1) 
+                    for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{x}][{y}]) = box_positions[{j}][{x}][{y}]' 
+                    for j in range(1, num_boxes + 1) 
+                    for x in range(1, model_data['width']) 
+                    for y in range(1, model_data['height']))};
+    """
 
-    for i in range(1, num_boxes):
-        keeper_box_transitions += f"""
-    -- ** Handling box movements when keeper pushes box[{i}] **
+    for i in range(1, num_boxes + 1):
+        for x in range(1, model_data['width'] - 1):
+            for y in range(1, model_data['height'] + 1):
+                keeper_box_transitions += f"""
 
-    -- Keeper pushes box[{i}] left
-    (keeper_x > 3 & !wall[keeper_x - 1][keeper_y] & !wall[keeper_x - 2][keeper_y] & box_positions[{i}][keeper_x - 1][keeper_y] & !goal[keeper_x - 1][keeper_y] & { ' & '.join(f'!box_positions[{j}][keeper_x - 2][keeper_y]' for j in range(1, num_boxes + 1) if j != i)}) : 
-        next(box_positions[{i}][keeper_x - 1][keeper_y]) = FALSE &
-        next(box_positions[{i}][keeper_x - 2][keeper_y]) = TRUE &
-        next(keeper_x) = keeper_x - 1 &
-        next(keeper_y) = keeper_y;
-    
-    
-    -- Keeper pushes box[{i}] right
-    (keeper_x < {model_data['width'] - 2} & !wall[keeper_x + 1][keeper_y] & !wall[keeper_x + 2][keeper_y] & box_positions[{i}][keeper_x + 1][keeper_y]  & !goal[keeper_x + 1][keeper_y] & { ' & '.join(f'!box_positions[{j}][keeper_x + 2][keeper_y]' for j in range(1, num_boxes + 1) if j != i)}) : 
-        next(box_positions[{i}][keeper_x + 1][keeper_y]) = FALSE &
-        next(box_positions[{i}][keeper_x + 2][keeper_y]) = TRUE &
-        next(keeper_x) = keeper_x + 1 &
-        next(keeper_y) = keeper_y;
-    
+    -- ** Handling box movements when keeper pushes box[{i}] right from position ({x},{y})**
+    keeper_x = {x} & !wall[{x + 1}][{y}] & !wall[{x + 2}][{y}] & 
+    box_positions[{i}][{x + 1}][{y}] & !goal[{x + 1}][{y}] {'&' if (num_boxes > 1) else ''} 
+    {' & '.join(f'!box_positions[{j}][{x + 2}][{y}]' for j in range(1, num_boxes + 1) if j != i)} : 
+        next(box_positions[{i}][{x + 1}][{y}]) = FALSE &
+        next(box_positions[{i}][{x + 2}][{y}]) = TRUE &
+        next(keeper_x) = {x + 1} &
+        next(keeper_y) = {y} &
+        {' & '.join(f'next(wall[{wx}][{wy}]) = wall[{wx}][{wy}]' 
+                    for wx in range(1, model_data['width'] + 1) 
+                    for wy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{gx}][{gy}]) = goal[{gx}][{gy}]' 
+                    for gx in range(1, model_data['width'] + 1) 
+                    for gy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{bx}][{by}]) = box_positions[{j}][{bx}][{by}]'
+                    for j in range(1, num_boxes + 1) 
+                    for bx in range(1, model_data['width'] + 1)
+                    for by in range(1, model_data['height'] + 1)
+                    if not (i == j and (bx == x + 2 or bx == x + 1) and (by == y)))};
+        """
 
-    -- Keeper pushes box[{i}] up
-    (keeper_y > 3 & !wall[keeper_x][keeper_y - 1] & !wall[keeper_x][keeper_y - 2] & box_positions[{i}][keeper_x][keeper_y - 1]  & !goal[keeper_x][keeper_y - 1] & { ' & '.join(f'!box_positions[{j}][keeper_x][keeper_y - 2]' for j in range(1, num_boxes + 1) if j != i)}) : 
-        next(box_positions[{i}][keeper_x][keeper_y - 1]) = FALSE &
-        next(box_positions[{i}][keeper_x][keeper_y - 2]) = TRUE &
-        next(keeper_x) = keeper_x &
-        next(keeper_y) = keeper_y - 1;
-    
+    for i in range(1, num_boxes + 1):
+        for x in range(3, model_data['width'] + 1):
+            for y in range(1, model_data['height'] + 1):
+                keeper_box_transitions += f"""
 
-    -- Keeper pushes box[{i}] down
-    (keeper_y < {model_data['height'] - 2} & !wall[keeper_x][keeper_y + 1] & !wall[keeper_x][keeper_y + 2] & box_positions[{i}][keeper_x][keeper_y + 1]  & !goal[keeper_x][keeper_y + 1] & { ' & '.join(f'!box_positions[{j}][keeper_x][keeper_y + 2]' for j in range(1, num_boxes + 1) if j != i)}) : 
-        next(box_positions[{i}][keeper_x][keeper_y + 1]) = FALSE &
-        next(box_positions[{i}][keeper_x][keeper_y + 2]) = TRUE &
-        next(keeper_x) = keeper_x &
-        next(keeper_y) = keeper_y + 1;
-    \n"""
-    
+    -- ** Handling box movements when keeper pushes box[{i}] left from position ({x},{y})**
+    keeper_x = {x} & !wall[{x - 1}][{y}] & !wall[{x - 2}][{y}] & 
+    box_positions[{i}][{x - 1}][{y}] & !goal[{x - 1}][{y}] {'&' if (num_boxes > 1) else ''} 
+    {' & '.join(f'!box_positions[{j}][{x - 2}][{y}]' for j in range(1, num_boxes + 1) if j != i)} : 
+        next(box_positions[{i}][{x - 1}][{y}]) = FALSE &
+        next(box_positions[{i}][{x - 2}][{y}]) = TRUE &
+        next(keeper_x) = {x - 1} &
+        next(keeper_y) = {y} &
+        {' & '.join(f'next(wall[{wx}][{wy}]) = wall[{wx}][{wy}]' 
+                    for wx in range(1, model_data['width'] + 1) 
+                    for wy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{gx}][{gy}]) = goal[{gx}][{gy}]' 
+                    for gx in range(1, model_data['width'] + 1) 
+                    for gy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{bx}][{by}]) = box_positions[{j}][{bx}][{by}]'
+                    for j in range(1, num_boxes + 1) 
+                    for bx in range(1, model_data['width'] + 1)
+                    for by in range(1, model_data['height'] + 1)
+                    if not (i == j and (bx == x - 2 or bx == x - 1) and (by == y)))};
+        """
+
+    for i in range(1, num_boxes + 1):
+        for y in range(3, model_data['height'] + 1):
+            for x in range(1, model_data['width'] + 1):
+                keeper_box_transitions += f"""
+
+    -- ** Handling box movements when keeper pushes box[{i}] up from position ({x},{y})**
+    keeper_y = {y} & !wall[{x}][{y - 1}] & !wall[{x}][{y - 2}] & 
+    box_positions[{i}][{x}][{y - 1}] & !goal[{x}][{y - 1}] {'&' if (num_boxes > 1) else ''} 
+    {' & '.join(f'!box_positions[{j}][{x}][{y - 2}]' for j in range(1, num_boxes + 1) if j != i)} : 
+        next(box_positions[{i}][{x}][{y - 1}]) = FALSE &
+        next(box_positions[{i}][{x}][{y - 2}]) = TRUE &
+        next(keeper_x) = {x} &
+        next(keeper_y) = {y - 1} &
+        {' & '.join(f'next(wall[{wx}][{wy}]) = wall[{wx}][{wy}]' 
+                    for wx in range(1, model_data['width'] + 1) 
+                    for wy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{gx}][{gy}]) = goal[{gx}][{gy}]' 
+                    for gx in range(1, model_data['width'] + 1) 
+                    for gy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{bx}][{by}]) = box_positions[{j}][{bx}][{by}]'
+                    for j in range(1, num_boxes + 1) 
+                    for bx in range(1, model_data['width'] + 1)
+                    for by in range(1, model_data['height'] + 1)
+                    if not (i == j and (by == y - 2 or by == y - 1) and (bx == x)))};
+        """
+
+    for i in range(1, num_boxes + 1):
+        for y in range(1, model_data['height'] - 1):
+            for x in range(1, model_data['width'] + 1):
+                keeper_box_transitions += f"""
+
+    -- ** Handling box movements when keeper pushes box[{i}] down from position ({x},{y})**
+    keeper_y = {y} & !wall[{x}][{y + 1}] & !wall[{x}][{y + 2}] & 
+    box_positions[{i}][{x}][{y + 1}] & !goal[{x}][{y + 1}] {'&' if (num_boxes > 1) else ''} 
+    {' & '.join(f'!box_positions[{j}][{x}][{y + 2}]' for j in range(1, num_boxes + 1) if j != i)} : 
+        next(box_positions[{i}][{x}][{y + 1}]) = FALSE &
+        next(box_positions[{i}][{x}][{y + 2}]) = TRUE &
+        next(keeper_x) = {x} &
+        next(keeper_y) = {y + 1} &
+        {' & '.join(f'next(wall[{wx}][{wy}]) = wall[{wx}][{wy}]' 
+                    for wx in range(1, model_data['width'] + 1) 
+                    for wy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{gx}][{gy}]) = goal[{gx}][{gy}]' 
+                    for gx in range(1, model_data['width'] + 1) 
+                    for gy in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{bx}][{by}]) = box_positions[{j}][{bx}][{by}]'
+                    for j in range(1, num_boxes + 1) 
+                    for bx in range(1, model_data['width'] + 1)
+                    for by in range(1, model_data['height'] + 1)
+                    if not (i == j and (by == y + 2 or by == y + 1) and (bx == x)))};
+        """    
     default_movements += f"""
     -- Default: No movement
     TRUE : 
         next(keeper_x) = keeper_x &
         next(keeper_y) = keeper_y &
-        { ' &\n        '.join(f'next(wall[{x}][{y}]) = wall[{x}][{y}]' for x in range(1, model_data['width'] + 1) for y in range(1, model_data['height'] + 1))} &\n
-        { ' &\n        '.join(f'next(goal[{x}][{y}]) = goal[{x}][{y}]' for x in range(1, model_data['width'] + 1) for y in range(1, model_data['height'] + 1))} &\n
-        { ' &\n        '.join(f'next(box_positions[{j}][{x}][{y}]) = box_positions[{j}][{x}][{y}]' for j in range(1, num_boxes) for x in range(1, model_data['width']) for y in range(1, model_data['height']))};\n"""
+        {' & '.join(f'next(wall[{x}][{y}]) = wall[{x}][{y}]' for x in range(1, model_data['width'] + 1) for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(goal[{x}][{y}]) = goal[{x}][{y}]' for x in range(1, model_data['width'] + 1) for y in range(1, model_data['height'] + 1))} &
+        {' & '.join(f'next(box_positions[{j}][{x}][{y}]) = box_positions[{j}][{x}][{y}]' for j in range(1, num_boxes + 1) for x in range(1, model_data['width'] + 1) for y in range(1, model_data['height'] + 1))};
+    """
         
-    transitions = "case" + keeper_transitions + keeper_box_transitions + default_movements + "esac;\n"
+    transitions = f"case\n{keeper_transitions}\n{keeper_box_transitions}\n{default_movements}\nesac;\n"
     return transitions
-
 
 def generate_smv_model(model_data):
     num_boxes = len(model_data['boxes'])
@@ -192,25 +301,12 @@ def generate_smv_model(model_data):
 
 if __name__ == "__main__":
     xsb_input = """
-    ----#####----------
-    ----#---#----------
-    ----#$--#----------
-    --###--$##---------
-    --#--$-$-#---------
-    ###-#-##-#---######
-    #---#-##-#####--..#
-    #-$--$----------..#
-    #####-###-#@##--..#
-    ----#-----#########
-    ----#######--------
+    ###
+    #@#
+    #$#
+    #.#
+    ###
     """
-    # xsb_input = """
-    # #####
-    # #@$.#
-    # #.$-#
-    # #...#
-    # #####
-    # """
 
     model_data = parse_xsb_to_model_data(xsb_input)
     smv_model = generate_smv_model(model_data)
